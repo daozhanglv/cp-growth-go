@@ -1,0 +1,23 @@
+title: cp-growth-go
+description: A competitive-programming growth log in Go with tested algorithm templates
+theme: minima
+url: "https://daozhanglv.github.io/cp-growth-go"
+baseurl: "/cp-growth-go"
+
+repository: daozhanglv/cp-growth-go
+
+show_excerpts: true
+
+header_pages:
+  - index.md
+  - algorithms/data-structures.md
+  - algorithms/graph-theory.md
+  - algorithms/dynamic-programming.md
+  - algorithms/string-algorithms.md
+  - algorithms/string-algorithms-advanced.md
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
