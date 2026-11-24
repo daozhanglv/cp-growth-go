@@ -31,6 +31,9 @@ The check script vets and tests the template packages and the shared test utilit
 | [treap.go](copypasta/treap.go) | Implicit treap (split/merge), rank tree |
 | [skip_list.go](copypasta/skip_list.go) | **[New]** Skip list — O(log n) ordered map, lower/upper bound, floor/ceiling |
 | [van_emde_boas.go](copypasta/van_emde_boas.go) | **[New]** Van Emde Boas tree — O(log log U) successor/predecessor |
+| [li_chao_tree.go](copypasta/li_chao_tree.go) | **[New]** Li Chao segment tree — dynamic max-y queries over lines y = kx + b |
+| [wavelet_tree.go](copypasta/wavelet_tree.go) | **[New]** Wavelet tree — static range k-th smallest and count ≤ v |
+| [skew_heap.go](copypasta/skew_heap.go) | **[New]** Skew heap — self-adjusting mergeable min-heap |
 | [link_cut_tree.go](copypasta/link_cut_tree.go) | Link-Cut Tree (LCT), dynamic tree connectivity |
 | [top_tree.go](copypasta/top_tree.go) | Top Tree |
 | [segment_tree_rect.go](copypasta/segment_tree_rect.go) | Sweep-line area of rectangle union |
@@ -44,6 +47,7 @@ The check script vets and tests the template packages and the shared test utilit
 | File | Contents |
 |------|----------|
 | [strings.go](copypasta/strings.go) | KMP, Z-algorithm, string hashing |
+| [suffix_array.go](copypasta/suffix_array.go) | **[New]** Suffix array (O(n log n) prefix doubling), Kasai LCP, distinct substrings, LCS |
 | [acam.go](copypasta/acam.go) | Aho-Corasick automaton |
 | [sam.go](copypasta/sam.go) | Suffix Automaton (SAM) |
 | [pam.go](copypasta/pam.go) | Palindromic Automaton (PAM / Eertree) |
@@ -57,6 +61,7 @@ The check script vets and tests the template packages and the shared test utilit
 | [math.go](copypasta/math.go) | Number theory: primes, factorization, Euler's totient, Möbius function, CRT |
 | [math_comb.go](copypasta/math_comb.go) | Combinatorics: binomial coefficients, Catalan, Stirling, partition |
 | [math_matrix.go](copypasta/math_matrix.go) | Matrix exponentiation, Gaussian elimination |
+| [berlekamp_massey.go](copypasta/berlekamp_massey.go) | **[New]** Berlekamp-Massey linear recurrence over Z/pZ |
 | [math_fft.go](copypasta/math_fft.go) | FFT, polynomial operations |
 | [math_ntt.go](copypasta/math_ntt.go) | NTT (Number Theoretic Transform) |
 | [math_gf.go](copypasta/math_gf.go) | Generating functions, formal power series |
@@ -79,6 +84,7 @@ The check script vets and tests the template packages and the shared test utilit
 | File | Contents |
 |------|----------|
 | [dp.go](copypasta/dp.go) | Knapsack (0-1, unbounded, grouped), interval DP, digit DP, bitmask DP, tree DP, DP optimizations (monotone queue, divide & conquer, Knuth, slope trick) |
+| [convex_hull_trick.go](copypasta/convex_hull_trick.go) | **[New]** Monotone Convex Hull Trick (`chtDeque`, `chtStack`) |
 
 ### Geometry
 

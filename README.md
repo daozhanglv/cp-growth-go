@@ -112,8 +112,13 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
   - [整体二分](/copypasta/cdq.go)
     - 动态区间第 k 小
   - [0-1 线段树 segment_tree01.go](/copypasta/segment_tree01.go)
+  - [李超线段树 li_chao_tree.go](/copypasta/li_chao_tree.go)
+  - [小波树 wavelet_tree.go](/copypasta/wavelet_tree.go)
   - [左偏树（可并堆）leftist_tree.go](/copypasta/leftist_tree.go)
+  - [斜堆（可并堆）skew_heap.go](/copypasta/skew_heap.go)
   - [笛卡尔树 cartesian_tree.go](/copypasta/cartesian_tree.go)
+  - [跳表 skip_list.go](/copypasta/skip_list.go)
+  - [van Emde Boas 树 van_emde_boas.go](/copypasta/van_emde_boas.go)
   - [二叉搜索树公共方法 bst.go](/copypasta/bst.go)
   - [Treap treap.go](/copypasta/treap/README.md)
     - [前 k 小元素和](/copypasta/treap/prefixsum/prefixsum.go)
@@ -143,7 +148,7 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
   - 最长回文子串 
     - Manacher 算法
   - [回文自动机（回文树，PAM）pam.go](/copypasta/pam.go)
-  - 后缀数组（SA）
+  - [后缀数组（SA）suffix_array.go](/copypasta/suffix_array.go)
   - [后缀自动机（SAM）sam.go](/copypasta/sam.go)
   - [字典树 trie.go](/copypasta/trie.go)
     - 可持久化字典树
@@ -204,7 +209,7 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
   - [连分数、佩尔方程 math_continued_fraction.go](/copypasta/math_continued_fraction.go)
   - [线性代数 math_matrix.go](/copypasta/math_matrix.go)
     - 矩阵快速幂
-    - Berlekamp-Massey 算法
+    - [Berlekamp-Massey 算法 berlekamp_massey.go](/copypasta/berlekamp_massey.go)
     - Kitamasa 算法
     - 高斯消元
     - 行列式
@@ -269,7 +274,7 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
     - 求个数
     - 求和
   - 倍增优化 DP
-  - 斜率优化 DP（CHT）
+  - [斜率优化 DP（CHT）convex_hull_trick.go](/copypasta/convex_hull_trick.go)
   - WQS 二分优化 DP（凸优化 DP / 带权二分）
   - 树形 DP
     - 树的直径个数

@@ -1,18 +1,22 @@
 package copypasta
 
+import "math/bits"
+
 /*
 Convex Hull Trick — Monotone (单调凸包优化 / 斜率优化DP)
 https://cp-algorithms.com/geometry/convex_hull_trick.html
 https://oi-wiki.org/dp/opt/slope/
 
+See also: dp.go (convexHullTrick, convexHullTrick2) for DP-oriented variants.
+
 Compared with Li Chao Tree (also in this package):
   - Li Chao Tree: arbitrary insert order, arbitrary query order, O(log n) each
   - CHT (this file): lines must be added in monotone slope order
-      * chtDeque:  queries must also be monotone → O(1) amortized per query
-      * chtStack:  arbitrary query order → O(log n) per query (binary search)
+      * chtDeque:  non-decreasing slopes + non-decreasing x queries → O(1) amortized
+      * chtStack:  non-increasing slopes + arbitrary x queries → O(log n) per query
 
 Common DP pattern:
-  dp[i] = min over j<i of { a[j]*b[i] + c[j] }
+  dp[i] = max over j<i of { a[j]*b[i] + c[j] }
   where a[j] is the "slope" and c[j] is the "intercept" of line j.
 
 Related problems:
@@ -22,40 +26,89 @@ LC1235 https://leetcode.cn/problems/maximum-profit-in-job-scheduling/
 https://atcoder.jp/contests/dp/tasks/dp_z
 */
 
-// bad returns true if line b is never the maximum among a, b, c.
-// i.e., the intersection of a,c is to the left of the intersection of a,b.
-func chtBad(a, b, c chtLine) bool {
-	// (c.b - a.b) * (a.k - b.k) >= (b.b - a.b) * (a.k - c.k)
-	return (c.b-a.b)*(a.k-b.k) >= (b.b-a.b)*(a.k-c.k)
-}
-
 type chtLine struct{ k, b int }
 
 func (l chtLine) eval(x int) int { return l.k*x + l.b }
 
+// chtMulCmp compares a*b with c*d using exact 128-bit signed arithmetic
+// to avoid 64-bit integer overflow when slopes and intercepts are large.
+func chtMulCmp(a, b, c, d int) int {
+	mulSigned := func(x, y int64) (int64, uint64) {
+		neg := (x < 0) != (y < 0)
+		var ux, uy uint64
+		if x < 0 {
+			ux = uint64(-x)
+		} else {
+			ux = uint64(x)
+		}
+		if y < 0 {
+			uy = uint64(-y)
+		} else {
+			uy = uint64(y)
+		}
+		uhi, ulo := bits.Mul64(ux, uy)
+		if neg {
+			ulo = ^ulo + 1
+			uhi = ^uhi
+			if ulo == 0 {
+				uhi++
+			}
+		}
+		return int64(uhi), ulo
+	}
+	hi1, lo1 := mulSigned(int64(a), int64(b))
+	hi2, lo2 := mulSigned(int64(c), int64(d))
+	if hi1 != hi2 {
+		if hi1 < hi2 {
+			return -1
+		}
+		return 1
+	}
+	if lo1 < lo2 {
+		return -1
+	}
+	if lo1 > lo2 {
+		return 1
+	}
+	return 0
+}
+
+// chtBadInc returns true if line b is never the maximum among a, b, c
+// when slopes are strictly increasing (a.k < b.k < c.k).
+// Equivalent to intersect(a, c) <= intersect(a, b).
+func chtBadInc(a, b, c chtLine) bool {
+	return chtMulCmp(a.b-c.b, b.k-a.k, a.b-b.b, c.k-a.k) <= 0
+}
+
+// chtBadDec returns true if line b is never the maximum among a, b, c
+// when slopes are strictly decreasing (a.k > b.k > c.k).
+// Equivalent to intersect(a, c) >= intersect(a, b).
+func chtBadDec(a, b, c chtLine) bool {
+	return chtMulCmp(c.b-a.b, a.k-b.k, b.b-a.b, a.k-c.k) >= 0
+}
+
 // chtDeque supports:
 //
-//	AddLine: lines added in DECREASING k order
-//	QueryMax: x must be INCREASING across queries
+//	AddLine:  lines added in NON-DECREASING k order
+//	QueryMax: x must be NON-DECREASING across queries
 //
-// Both operations are O(1) amortized.
-//
-// Lines are stored with index 0 = highest slope; new lines (lower slope) are
-// appended at the back.  For increasing x queries, the optimal line moves from
-// the back (low slope, optimal at small x) toward the front (high slope,
-// optimal at large x), so we track a hi pointer that retreats from the back.
+// Both operations are O(1) amortized, even when interleaved.
 type chtDeque struct {
 	lines []chtLine
-	hi    int // back pointer: current candidate is lines[hi]; starts at len-1
 }
 
 func (c *chtDeque) AddLine(k, b int) {
+	if n := len(c.lines); n > 0 && c.lines[n-1].k == k {
+		if b <= c.lines[n-1].b {
+			return
+		}
+		c.lines = c.lines[:n-1]
+	}
 	l := chtLine{k, b}
-	for len(c.lines) >= 2 && chtBad(c.lines[len(c.lines)-2], c.lines[len(c.lines)-1], l) {
+	for len(c.lines) >= 2 && chtBadInc(c.lines[len(c.lines)-2], c.lines[len(c.lines)-1], l) {
 		c.lines = c.lines[:len(c.lines)-1]
 	}
 	c.lines = append(c.lines, l)
-	c.hi = len(c.lines) - 1
 }
 
 // QueryMax returns max y at x. x must be >= all previous query x values.
@@ -63,24 +116,29 @@ func (c *chtDeque) QueryMax(x int) int {
 	if len(c.lines) == 0 {
 		panic("chtDeque: no lines added")
 	}
-	// Advance hi toward 0: if the line before hi is better at x, move hi back.
-	for c.hi > 0 && c.lines[c.hi-1].eval(x) >= c.lines[c.hi].eval(x) {
-		c.hi--
+	for len(c.lines) >= 2 && c.lines[0].eval(x) <= c.lines[1].eval(x) {
+		c.lines = c.lines[1:]
 	}
-	return c.lines[c.hi].eval(x)
+	return c.lines[0].eval(x)
 }
 
 // chtStack supports:
 //
-//	AddLine: lines added in DECREASING k order
+//	AddLine:  lines added in NON-INCREASING k order
 //	QueryMax: arbitrary x (binary search)
 type chtStack struct {
 	lines []chtLine
 }
 
 func (c *chtStack) AddLine(k, b int) {
+	if n := len(c.lines); n > 0 && c.lines[n-1].k == k {
+		if b <= c.lines[n-1].b {
+			return
+		}
+		c.lines = c.lines[:n-1]
+	}
 	l := chtLine{k, b}
-	for len(c.lines) >= 2 && chtBad(c.lines[len(c.lines)-2], c.lines[len(c.lines)-1], l) {
+	for len(c.lines) >= 2 && chtBadDec(c.lines[len(c.lines)-2], c.lines[len(c.lines)-1], l) {
 		c.lines = c.lines[:len(c.lines)-1]
 	}
 	c.lines = append(c.lines, l)
@@ -92,7 +150,7 @@ func (c *chtStack) QueryMax(x int) int {
 	if n == 0 {
 		panic("chtStack: no lines added")
 	}
-	// binary search: find last line where lines[i] >= lines[i+1] at x
+	// binary search: find first line where lines[i] >= lines[i+1] at x
 	lo, hi := 0, n-1
 	for lo < hi {
 		mid := (lo + hi) / 2

@@ -117,6 +117,120 @@ func TestVEBRandomized(t *testing.T) {
 	}
 }
 
+func TestVEBDuplicateInsertAndMissingDelete(t *testing.T) {
+	v := newVEB(16)
+
+	// Delete on empty tree should be a no-op.
+	v.Delete(0)
+	v.Delete(5)
+	if !v.IsEmpty() {
+		t.Fatal("tree should still be empty")
+	}
+
+	// Single element: deleting a different value must not clear the set.
+	v.Insert(5)
+	v.Delete(3)
+	if !v.Member(5) || v.Min() != 5 || v.Max() != 5 {
+		t.Fatalf("deleting missing element corrupted single-element tree: min=%d max=%d", v.Min(), v.Max())
+	}
+
+	// Duplicate insert of min and non-min must not corrupt invariants.
+	v.Insert(5)
+	v.Insert(1)
+	v.Insert(1) // duplicate min
+	v.Insert(9)
+	v.Insert(9) // duplicate max
+	v.Delete(1)
+	if v.Member(1) || v.Min() != 5 {
+		t.Fatalf("after deleting duplicate-inserted min 1: member=%v min=%d", v.Member(1), v.Min())
+	}
+	v.Delete(7) // missing element in multi-element tree
+	if !v.Member(5) || !v.Member(9) || v.Min() != 5 || v.Max() != 9 {
+		t.Fatalf("deleting missing element corrupted tree: min=%d max=%d", v.Min(), v.Max())
+	}
+
+	// Out-of-range operations should be safe no-ops.
+	v.Insert(-1)
+	v.Insert(16)
+	v.Delete(-1)
+	v.Delete(16)
+	if v.Member(-1) || v.Member(16) {
+		t.Fatal("out-of-range elements should never be members")
+	}
+}
+
+func TestVEBRandomizedBruteForce(t *testing.T) {
+	const U = 1 << 8
+	rng := rand.New(rand.NewSource(12345))
+	v := newVEB(U)
+	set := make(map[int]bool)
+
+	bruteMin := func() int {
+		res := vebNil
+		for x := range set {
+			if res == vebNil || x < res {
+				res = x
+			}
+		}
+		return res
+	}
+	bruteMax := func() int {
+		res := vebNil
+		for x := range set {
+			if res == vebNil || x > res {
+				res = x
+			}
+		}
+		return res
+	}
+	bruteSucc := func(q int) int {
+		res := vebNil
+		for x := range set {
+			if x > q && (res == vebNil || x < res) {
+				res = x
+			}
+		}
+		return res
+	}
+	brutePred := func(q int) int {
+		res := vebNil
+		for x := range set {
+			if x < q && (res == vebNil || x > res) {
+				res = x
+			}
+		}
+		return res
+	}
+
+	for step := 0; step < 3000; step++ {
+		x := rng.Intn(U)
+		switch rng.Intn(4) {
+		case 0, 1: // insert (including duplicates)
+			v.Insert(x)
+			set[x] = true
+		case 2: // delete (including missing elements)
+			v.Delete(x)
+			delete(set, x)
+		case 3: // queries
+			if got, want := v.Member(x), set[x]; got != want {
+				t.Fatalf("step %d Member(%d): got %v want %v", step, x, got, want)
+			}
+			if got, want := v.Min(), bruteMin(); got != want {
+				t.Fatalf("step %d Min(): got %d want %d", step, got, want)
+			}
+			if got, want := v.Max(), bruteMax(); got != want {
+				t.Fatalf("step %d Max(): got %d want %d", step, got, want)
+			}
+			if got, want := v.Successor(x), bruteSucc(x); got != want {
+				t.Fatalf("step %d Successor(%d): got %d want %d", step, x, got, want)
+			}
+			if got, want := v.Predecessor(x), brutePred(x); got != want {
+				t.Fatalf("step %d Predecessor(%d): got %d want %d", step, x, got, want)
+			}
+		}
+	}
+}
+
 func BenchmarkVEBInsert(b *testing.B) {
 	v := newVEB(1 << 20)
 	b.ResetTimer()
