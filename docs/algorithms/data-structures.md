@@ -110,8 +110,8 @@ Slope-trick DP optimization for transitions of the form `dp[i] = max(k[j]*x[i] +
 
 | Variant | Constraint | Complexity |
 |---------|-----------|-----------|
-| `chtDeque` | Lines: decreasing k; Queries: increasing x | O(1) amortized |
-| `chtStack` | Lines: decreasing k; Queries: arbitrary | O(log n) per query |
+| `chtDeque` | Lines: non-decreasing k; Queries: non-decreasing x | O(1) amortized |
+| `chtStack` | Lines: non-increasing k; Queries: arbitrary | O(log n) per query |
 
 Use `chtDeque` when both slopes and query x-values are monotone; otherwise use the Li Chao Tree.
 

@@ -1,6 +1,7 @@
 package copypasta
 
 import (
+	"math/rand"
 	"sort"
 	"testing"
 )
@@ -88,5 +89,59 @@ func TestLongestCommonSubstring(t *testing.T) {
 	}
 	if got := longestCommonSubstring("abcabc", "bcabca"); got != 5 { // "bcabc" or "cabca"
 		t.Fatalf("LCS(abcabc,bcabca): want 5, got %d", got)
+	}
+}
+
+func TestBuildSAEdgeAndRandomBruteForce(t *testing.T) {
+	if got := buildSA(""); len(got) != 0 {
+		t.Fatalf("empty string: want nil/empty, got %v", got)
+	}
+	if got := buildSA("x"); len(got) != 1 || got[0] != 0 {
+		t.Fatalf("single char: want [0], got %v", got)
+	}
+
+	rng := rand.New(rand.NewSource(7))
+	for tc := 0; tc < 100; tc++ {
+		n := 1 + rng.Intn(80)
+		alpha := 1 + rng.Intn(5)
+		buf := make([]byte, n)
+		for i := range buf {
+			// Include byte 0 in some tests to ensure separator/null byte safety.
+			if tc%5 == 0 {
+				buf[i] = byte(rng.Intn(alpha))
+			} else {
+				buf[i] = byte('a' + rng.Intn(alpha))
+			}
+		}
+		s := string(buf)
+		sa := buildSA(s)
+
+		wantSA := make([]int, n)
+		for i := range wantSA {
+			wantSA[i] = i
+		}
+		sort.Slice(wantSA, func(i, j int) bool {
+			return s[wantSA[i]:] < s[wantSA[j]:]
+		})
+		for i := 0; i < n; i++ {
+			if sa[i] != wantSA[i] {
+				t.Fatalf("tc %d sa[%d]: want %d, got %d (s=%q)", tc, i, wantSA[i], sa[i], s)
+			}
+		}
+
+		lcp := buildLCP(s, sa)
+		if lcp[0] != 0 {
+			t.Fatalf("tc %d lcp[0]: want 0, got %d", tc, lcp[0])
+		}
+		for i := 1; i < n; i++ {
+			a, b := s[sa[i-1]:], s[sa[i]:]
+			want := 0
+			for want < len(a) && want < len(b) && a[want] == b[want] {
+				want++
+			}
+			if lcp[i] != want {
+				t.Fatalf("tc %d lcp[%d]: want %d, got %d", tc, i, want, lcp[i])
+			}
+		}
 	}
 }

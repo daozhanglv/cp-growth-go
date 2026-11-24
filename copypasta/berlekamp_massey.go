@@ -8,9 +8,11 @@ https://oi-wiki.org/math/berlekamp-massey/
 Given a sequence s[0..n-1] over Z/pZ (p prime), finds the shortest linear
 recurrence: s[i] = rec[0]*s[i-1] + rec[1]*s[i-2] + ... + rec[L-1]*s[i-L].
 
+See also: math_matrix.go (berlekampMassey) for the fixed-modulus int variant.
+
 Typical use in contests:
   1. Compute enough terms with brute force or DP.
-  2. Call berlekampMassey to find the recurrence.
+  2. Call berlekampMasseyMod to find the recurrence.
   3. Evaluate s[n] for large n using matrix exponentiation (O(L³ log n))
      or Cayley-Hamilton (O(L² log n + L log L log n)).
 

@@ -35,7 +35,7 @@ Given a sequence `s[0..n-1]` over Z/pZ, finds the shortest linear recurrence aut
 mod := int64(1e9 + 7)
 // Fibonacci: 0,1,1,2,3,5,...
 s := []int64{0, 1, 1, 2, 3, 5, 8, 13}
-rec := berlekampMassey(s, mod)
+rec := berlekampMasseyMod(s, mod)
 // rec = [1, 1]  meaning s[i] = 1*s[i-1] + 1*s[i-2]
 ```
 

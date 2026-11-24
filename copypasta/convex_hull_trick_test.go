@@ -6,26 +6,49 @@ import (
 )
 
 func TestCHTDequeBasic(t *testing.T) {
-	// lines with decreasing k: y=5x, y=3x+4, y=x+10, y=-x+20
+	// lines with non-decreasing k: y=-x+20, y=x+10, y=3x+4, y=5x
 	c := &chtDeque{}
-	c.AddLine(5, 0)
-	c.AddLine(3, 4)
-	c.AddLine(1, 10)
 	c.AddLine(-1, 20)
+	c.AddLine(1, 10)
+	c.AddLine(3, 4)
+	c.AddLine(5, 0)
 
-	// queries in increasing x order
+	// queries in non-decreasing x order
 	cases := [][2]int{{0, 20}, {2, 18}, {5, 25}, {10, 50}, {15, 75}}
-	// manually computed maximums:
-	// x=0:  max(0, 4, 10, 20) = 20  (line -x+20)
-	// x=2:  max(10, 10, 12, 18) = 18  (line -x+20... wait let me recalculate)
-	// Actually: at x=2: 5*2=10, 3*2+4=10, 1*2+10=12, -1*2+20=18 → max=18
-	// at x=5: 25, 19, 15, 15 → max=25
-	// at x=10: 50, 34, 20, 10 → max=50
-	// at x=15: 75, 49, 25, 5 → max=75
-	expected := []int{20, 18, 25, 50, 75}
-	for i, tc := range cases {
-		if got := c.QueryMax(tc[0]); got != expected[i] {
-			t.Errorf("QueryMax(%d): want %d, got %d", tc[0], expected[i], got)
+	for _, tc := range cases {
+		if got := c.QueryMax(tc[0]); got != tc[1] {
+			t.Errorf("QueryMax(%d): want %d, got %d", tc[0], tc[1], got)
+		}
+	}
+}
+
+func TestCHTDequeInterleavedAndEqualSlopes(t *testing.T) {
+	rng := rand.New(rand.NewSource(99))
+	type line struct{ k, b int }
+	var lines []line
+	cd := &chtDeque{}
+
+	k := -500
+	x := -500
+	for step := 0; step < 500; step++ {
+		// Advance k non-decreasingly (allow equal slopes).
+		k += rng.Intn(3)
+		b := rng.Intn(2000) - 1000
+		lines = append(lines, line{k, b})
+		cd.AddLine(k, b)
+
+		// Interleaved non-decreasing x queries.
+		for q := 0; q < 3; q++ {
+			x += rng.Intn(3)
+			brute := -1 << 60
+			for _, l := range lines {
+				if v := l.k*x + l.b; v > brute {
+					brute = v
+				}
+			}
+			if got := cd.QueryMax(x); got != brute {
+				t.Fatalf("step %d x=%d: brute=%d chtDeque=%d", step, x, brute, got)
+			}
 		}
 	}
 }
@@ -58,17 +81,17 @@ func TestCHTConsistencyWithBrute(t *testing.T) {
 	var lines []line
 
 	cs := &chtStack{}
-	n := 50
-	// add lines with decreasing slope
-	for i := 0; i < n; i++ {
-		k := n - i
+	k := 100
+	// add lines with non-increasing slope (including equal slopes)
+	for i := 0; i < 80; i++ {
+		k -= rng.Intn(3)
 		b := rng.Intn(200) - 100
 		lines = append(lines, line{k, b})
 		cs.AddLine(k, b)
 	}
 
 	// verify against brute force for random queries
-	for q := 0; q < 100; q++ {
+	for q := 0; q < 200; q++ {
 		x := rng.Intn(200) - 100
 		brute := -1 << 60
 		for _, l := range lines {
@@ -78,6 +101,49 @@ func TestCHTConsistencyWithBrute(t *testing.T) {
 		}
 		if got := cs.QueryMax(x); got != brute {
 			t.Fatalf("x=%d: brute=%d cht=%d", x, brute, got)
+		}
+	}
+}
+
+func TestCHTLargeCoordinatesNoOverflow(t *testing.T) {
+	// Slopes ~ 1e9 and intercepts ~ 1e12 would overflow int64 in naive (db * dk).
+	const scaleK = 1_000_000_000
+	const scaleB = 1_000_000_000_000
+	lines := []chtLine{
+		{1 * scaleK, 3 * scaleB},
+		{2 * scaleK, 2 * scaleB},
+		{3 * scaleK, 0},
+	}
+
+	cd := &chtDeque{}
+	for _, l := range lines {
+		cd.AddLine(l.k, l.b)
+	}
+	for _, x := range []int{0, 500, 1000, 1500, 3000} {
+		want := lines[0].eval(x)
+		for _, l := range lines[1:] {
+			if v := l.eval(x); v > want {
+				want = v
+			}
+		}
+		if got := cd.QueryMax(x); got != want {
+			t.Fatalf("chtDeque large x=%d: want %d got %d", x, want, got)
+		}
+	}
+
+	cs := &chtStack{}
+	for i := len(lines) - 1; i >= 0; i-- {
+		cs.AddLine(lines[i].k, lines[i].b)
+	}
+	for _, x := range []int{3000, 0, 1500, 500, 1000} {
+		want := lines[0].eval(x)
+		for _, l := range lines[1:] {
+			if v := l.eval(x); v > want {
+				want = v
+			}
+		}
+		if got := cs.QueryMax(x); got != want {
+			t.Fatalf("chtStack large x=%d: want %d got %d", x, want, got)
 		}
 	}
 }

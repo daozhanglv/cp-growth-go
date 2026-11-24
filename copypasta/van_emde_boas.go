@@ -71,8 +71,8 @@ func buildVEB(u int) *veb {
 	return v
 }
 
-func (v *veb) high(x int) int  { return x / v.sqrtU }
-func (v *veb) low(x int) int   { return x % v.sqrtU }
+func (v *veb) high(x int) int   { return x / v.sqrtU }
+func (v *veb) low(x int) int    { return x % v.sqrtU }
 func (v *veb) idx(h, l int) int { return h*v.sqrtU + l }
 
 // IsEmpty reports whether the set is empty.
@@ -86,6 +86,9 @@ func (v *veb) Max() int { return v.max }
 
 // Member reports whether x is in the set.
 func (v *veb) Member(x int) bool {
+	if x < 0 || x >= v.u {
+		return false
+	}
 	switch x {
 	case v.min, v.max:
 		return true
@@ -96,8 +99,15 @@ func (v *veb) Member(x int) bool {
 	return v.cluster[v.high(x)].Member(v.low(x))
 }
 
-// Insert adds x to the set. No-op if already present.
+// Insert adds x to the set. No-op if x is out of range or already present.
 func (v *veb) Insert(x int) {
+	if x < 0 || x >= v.u || v.Member(x) {
+		return
+	}
+	v.insert(x)
+}
+
+func (v *veb) insert(x int) {
 	if v.min == vebNil {
 		v.min, v.max = x, x
 		return
@@ -108,17 +118,24 @@ func (v *veb) Insert(x int) {
 	if v.u > 2 {
 		h, l := v.high(x), v.low(x)
 		if v.cluster[h].IsEmpty() {
-			v.summary.Insert(h)
+			v.summary.insert(h)
 		}
-		v.cluster[h].Insert(l)
+		v.cluster[h].insert(l)
 	}
 	if x > v.max {
 		v.max = x
 	}
 }
 
-// Delete removes x from the set. No-op if not present.
+// Delete removes x from the set. No-op if x is out of range or not present.
 func (v *veb) Delete(x int) {
+	if x < 0 || x >= v.u || !v.Member(x) {
+		return
+	}
+	v.delete(x)
+}
+
+func (v *veb) delete(x int) {
 	if v.min == v.max {
 		// only one element
 		v.min, v.max = vebNil, vebNil
@@ -141,9 +158,9 @@ func (v *veb) Delete(x int) {
 		v.min = x // update min without recursing further
 	}
 	h, l := v.high(x), v.low(x)
-	v.cluster[h].Delete(l)
+	v.cluster[h].delete(l)
 	if v.cluster[h].IsEmpty() {
-		v.summary.Delete(h)
+		v.summary.delete(h)
 		if x == v.max {
 			summaryMax := v.summary.max
 			if summaryMax == vebNil {

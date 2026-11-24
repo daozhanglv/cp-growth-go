@@ -23,8 +23,9 @@ This project is based on [codeforces-go](https://github.com/EndlessCheng/codefor
 | [Data Structures](algorithms/data-structures) | Segment tree, BIT, Skip list, VEB tree, LCT, Treap |
 | [Graph Theory](algorithms/graph-theory) | Dijkstra, Max Flow, LCA, HLD, SCC, 2-SAT |
 | [Dynamic Programming](algorithms/dynamic-programming) | Knapsack, Slope Trick, Digit DP, Bitmask DP |
-| [String Algorithms](algorithms/string-algorithms) | KMP, SAM, Aho-Corasick, Suffix Array |
-| Mathematics | FFT/NTT, Number Theory, Matrix Exponentiation |
+| [String Algorithms](algorithms/string-algorithms) | KMP, SAM, Aho-Corasick, PAM, Trie |
+| [Advanced Strings & Sequences](algorithms/string-algorithms-advanced) | Suffix Array, Berlekamp-Massey |
+| Mathematics (`copypasta/math*.go`) | FFT/NTT, Number Theory, Matrix Exponentiation |
 
 ## Quick Start
 
