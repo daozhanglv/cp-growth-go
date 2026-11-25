@@ -149,13 +149,58 @@ func TestVEBDuplicateInsertAndMissingDelete(t *testing.T) {
 		t.Fatalf("deleting missing element corrupted tree: min=%d max=%d", v.Min(), v.Max())
 	}
 
-	// Out-of-range operations should be safe no-ops.
+	// Out-of-range operations should be safe no-ops and return valid bounds.
 	v.Insert(-1)
 	v.Insert(16)
 	v.Delete(-1)
 	v.Delete(16)
 	if v.Member(-1) || v.Member(16) {
 		t.Fatal("out-of-range elements should never be members")
+	}
+	// Remaining set is {5, 9}
+	if got := v.Successor(-10); got != 5 {
+		t.Fatalf("Successor(-10): want 5, got %d", got)
+	}
+	if got := v.Successor(16); got != vebNil {
+		t.Fatalf("Successor(16): want vebNil, got %d", got)
+	}
+	if got := v.Successor(100); got != vebNil {
+		t.Fatalf("Successor(100): want vebNil, got %d", got)
+	}
+	if got := v.Predecessor(-10); got != vebNil {
+		t.Fatalf("Predecessor(-10): want vebNil, got %d", got)
+	}
+	if got := v.Predecessor(16); got != 9 {
+		t.Fatalf("Predecessor(16): want 9, got %d", got)
+	}
+	if got := v.Predecessor(100); got != 9 {
+		t.Fatalf("Predecessor(100): want 9, got %d", got)
+	}
+
+	// Small and degenerate universes u = 0, 1, 2, 3
+	emptyU := newVEB(0)
+	emptyU.Insert(0)
+	if !emptyU.IsEmpty() || emptyU.Successor(-1) != vebNil || emptyU.Predecessor(1) != vebNil {
+		t.Fatal("u=0 vEB must stay empty")
+	}
+	for _, u := range []int{1, 2, 3, 4} {
+		small := newVEB(u)
+		small.Insert(0)
+		if u > 1 {
+			small.Insert(u - 1)
+		}
+		if got := small.Successor(-1); got != 0 {
+			t.Fatalf("u=%d Successor(-1): want 0, got %d", u, got)
+		}
+		if got := small.Successor(u + 5); got != vebNil {
+			t.Fatalf("u=%d Successor(%d): want vebNil, got %d", u, u+5, got)
+		}
+		if got := small.Predecessor(-1); got != vebNil {
+			t.Fatalf("u=%d Predecessor(-1): want vebNil, got %d", u, got)
+		}
+		if got := small.Predecessor(u + 5); got != u-1 {
+			t.Fatalf("u=%d Predecessor(%d): want %d, got %d", u, u+5, u-1, got)
+		}
 	}
 }
 

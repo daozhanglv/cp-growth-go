@@ -147,3 +147,46 @@ func TestCHTLargeCoordinatesNoOverflow(t *testing.T) {
 		}
 	}
 }
+
+func TestCHTMinVariantsAndFrog3DP(t *testing.T) {
+	// AtCoder Educational DP Contest Z - Frog 3:
+	// dp[i] = min_{j<i} (dp[j] + (h[i]-h[j])^2 + C)
+	//       = h[i]^2 + C + min_{j<i} (-2*h[j]*h[i] + dp[j] + h[j]^2)
+	// h is strictly increasing => slopes -2*h[j] are strictly decreasing, queries h[i] are increasing.
+	h := []int{1, 2, 3, 4, 5}
+	const cost = 6
+	dp := make([]int, len(h))
+	md := &chtMinDeque{}
+	md.AddLine(-2*h[0], dp[0]+h[0]*h[0])
+	for i := 1; i < len(h); i++ {
+		dp[i] = h[i]*h[i] + cost + md.QueryMin(h[i])
+		md.AddLine(-2*h[i], dp[i]+h[i]*h[i])
+	}
+	// Sample 1 of AtCoder dp_z: h=[1,2,3,4,5], C=6 => answer = 20
+	if dp[len(h)-1] != 20 {
+		t.Fatalf("Frog 3 sample: got %d, want 20", dp[len(h)-1])
+	}
+
+	rng := rand.New(rand.NewSource(123))
+	ms := &chtMinStack{}
+	var lines []chtLine
+	k := -200
+	for i := 0; i < 60; i++ {
+		k += rng.Intn(4) // non-decreasing k for chtMinStack
+		b := rng.Intn(1000) - 500
+		lines = append(lines, chtLine{k, b})
+		ms.AddLine(k, b)
+	}
+	for q := 0; q < 100; q++ {
+		x := rng.Intn(400) - 200
+		want := lines[0].eval(x)
+		for _, l := range lines[1:] {
+			if v := l.eval(x); v < want {
+				want = v
+			}
+		}
+		if got := ms.QueryMin(x); got != want {
+			t.Fatalf("chtMinStack x=%d: got %d, want %d", x, got, want)
+		}
+	}
+}

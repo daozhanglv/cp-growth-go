@@ -291,41 +291,10 @@ func _() {
 	// pi[i] 为 s[:i+1] 的真前缀和真后缀的最长匹配长度    pi[0] = 0
 	// 定义 s[:i+1] 的最大真 border 为 s[:pi[i]]    完整定义见 https://www.luogu.com.cn/problem/P5829
 	// 注：「真」表示不等于整个字符串
-	kmpCalcPi := func(s string) []int {
-		pi := make([]int, len(s))
-		match := 0
-		for i := 1; i < len(pi); i++ {
-			v := s[i]
-			for match > 0 && s[match] != v {
-				match = pi[match-1]
-			}
-			if s[match] == v {
-				match++
-			}
-			pi[i] = match
-		}
-		return pi
-	}
+	kmpCalcPi := kmpCalcPi
 
 	// 在文本串 text 中查找模式串 pattern，返回所有成功匹配的位置（pattern[0] 在 text 中的下标）
-	kmpSearch := func(text, pattern string) (pos []int) {
-		pi := kmpCalcPi(pattern)
-		match := 0
-		for i := range text {
-			v := text[i]
-			for match > 0 && pattern[match] != v {
-				match = pi[match-1]
-			}
-			if pattern[match] == v {
-				match++
-			}
-			if match == len(pi) {
-				pos = append(pos, i-len(pi)+1)
-				match = pi[match-1] // 如果不允许重叠，将 cnt 置为 0
-			}
-		}
-		return
-	}
+	kmpSearch := kmpSearch
 
 	// EXTRA: 最小循环节
 	// 返回循环节以及循环次数
@@ -336,14 +305,7 @@ func _() {
 	// https://codeforces.com/problemset/problem/825/F 2400
 	// http://poj.org/problem?id=2406 https://www.luogu.com.cn/problem/UVA455
 	// LC459 https://leetcode.cn/problems/repeated-substring-pattern/
-	calcMinPeriod := func(s string) (string, int) {
-		n := len(s)
-		pi := kmpCalcPi(s)
-		if m := pi[n-1]; m > 0 && n%(n-m) == 0 {
-			return s[:n-m], n / (n - m)
-		}
-		return s, 1 // 无小于 n 的循环节
-	}
+	calcMinPeriod := calcMinPeriod
 
 	// fail 树 / 失配树 / border 树
 	// i+1 的父节点为 pi[i]    注：i 从 0 开始
@@ -431,57 +393,16 @@ func _() {
 	// 		构造 s+t 和 t+s
 	// 判断一个字符串 t 是否为 prefix+reverse(s)+suffix，其中 prefix+suffix=s https://atcoder.jp/contests/abc284/tasks/abc284_f
 	//      构造 t+reverse(t) 和 reverse(t)+t
-	calcZ := func(s string) []int {
-		n := len(s)
-		z := make([]int, n)
-		z[0] = n
-		boxL, boxR := 0, 0 // z-box 左右边界（闭区间）
-		for i := 1; i < n; i++ {
-			if i <= boxR {
-				z[i] = min(z[i-boxL], boxR-i+1)
-			}
-			for i+z[i] < n && s[z[i]] == s[i+z[i]] {
-				boxL, boxR = i, i+z[i]
-				z[i]++
-			}
-		}
-		return z
-	}
+	calcZ := calcZ
 	// 在 text 中查找 pattern 的所有（首字母）位置
 	// 技巧：把 pattern 拼在 text 前面（中间插入一个不在输入中的字符），得到字符串 s，
 	//      只要 LCP(s, s[i:]) == len(pattern)，就说明 i 是一个匹配的位置
 	// 可以用这题测试 LC3008 https://leetcode.cn/problems/find-beautiful-indices-in-the-given-array-ii/ 2016
-	zSearch := func(text, pattern string) (pos []int) {
-		z := calcZ(pattern + "#" + text)
-		for i, l := range z[len(pattern)+1:] {
-			if l == len(pattern) {
-				pos = append(pos, i)
-			}
-		}
-		return
-	}
+	zSearch := zSearch
 	// zSearch 中的技巧还可以用来比较 text 的任意后缀 text[i:] 与 pattern 的大小（字典序）
 	// res[i] 等同于 strings.Compare(text[i:], pattern)
 	// https://codeforces.com/contest/1051/problem/E 2600
-	zCompare := func(text, pattern string) []int {
-		z := calcZ(pattern + "#" + text)
-		compare := func(i int) int {
-			lcp := z[len(pattern)+1+i]
-			if lcp == len(pattern) { // 相等
-				return 0
-			}
-			// 比较 LCP 的下一个字母
-			if text[i+lcp] < pattern[lcp] {
-				return -1
-			}
-			return 1
-		}
-		res := make([]int, len(text))
-		for i := range res {
-			res[i] = compare(i)
-		}
-		return res
-	}
+	zCompare := zCompare
 
 	// Main–Lorentz 算法
 	// https://oi-wiki.org/string/main-lorentz/
@@ -1399,5 +1320,150 @@ func _() {
 	}
 }
 
-// AC 自动机见 trie.go
+// AC 自动机见 acam.go / trie.go
 // 后缀自动机见 sam.go
+
+func kmpCalcPi(s string) []int {
+	pi := make([]int, len(s))
+	match := 0
+	for i := 1; i < len(pi); i++ {
+		v := s[i]
+		for match > 0 && s[match] != v {
+			match = pi[match-1]
+		}
+		if s[match] == v {
+			match++
+		}
+		pi[i] = match
+	}
+	return pi
+}
+
+func kmpSearch(text, pattern string) (pos []int) {
+	if len(pattern) == 0 {
+		return nil
+	}
+	pi := kmpCalcPi(pattern)
+	match := 0
+	for i := range text {
+		v := text[i]
+		for match > 0 && pattern[match] != v {
+			match = pi[match-1]
+		}
+		if pattern[match] == v {
+			match++
+		}
+		if match == len(pi) {
+			pos = append(pos, i-len(pi)+1)
+			match = pi[match-1]
+		}
+	}
+	return
+}
+
+func calcMinPeriod(s string) (string, int) {
+	n := len(s)
+	if n == 0 {
+		return "", 0
+	}
+	pi := kmpCalcPi(s)
+	if m := pi[n-1]; m > 0 && n%(n-m) == 0 {
+		return s[:n-m], n / (n - m)
+	}
+	return s, 1
+}
+
+func calcZ(s string) []int {
+	n := len(s)
+	if n == 0 {
+		return nil
+	}
+	z := make([]int, n)
+	z[0] = n
+	boxL, boxR := 0, 0
+	for i := 1; i < n; i++ {
+		if i <= boxR {
+			z[i] = min(z[i-boxL], boxR-i+1)
+		}
+		for i+z[i] < n && s[z[i]] == s[i+z[i]] {
+			boxL, boxR = i, i+z[i]
+			z[i]++
+		}
+	}
+	return z
+}
+
+func zSearch(text, pattern string) (pos []int) {
+	if len(pattern) == 0 {
+		return nil
+	}
+	z := calcZ(pattern + "#" + text)
+	for i, l := range z[len(pattern)+1:] {
+		if l == len(pattern) {
+			pos = append(pos, i)
+		}
+	}
+	return
+}
+
+// zCompare compares every suffix text[i:] against pattern (requires '#' not in text/pattern).
+// res[i] equals strings.Compare(text[i:], pattern).
+func zCompare(text, pattern string) []int {
+	z := calcZ(pattern + "#" + text)
+	compare := func(i int) int {
+		lcp := z[len(pattern)+1+i]
+		if lcp == len(pattern) {
+			if len(text)-i == len(pattern) {
+				return 0
+			}
+			return 1
+		}
+		if i+lcp == len(text) {
+			return -1
+		}
+		if text[i+lcp] < pattern[lcp] {
+			return -1
+		}
+		return 1
+	}
+	res := make([]int, len(text))
+	for i := range res {
+		res[i] = compare(i)
+	}
+	return res
+}
+
+// manacherHalfLen returns the Manacher halfLen array on '^#s[0]#...#s[n-1]#$'.
+// Substring s[l:r+1] (0 <= l <= r < len(s)) is a palindrome iff halfLen[l+r+2] > r-l+1.
+func manacherHalfLen(s string) []int {
+	t := append(make([]byte, 0, len(s)*2+3), '^')
+	for i := 0; i < len(s); i++ {
+		t = append(t, '#', s[i])
+	}
+	t = append(t, '#', '$')
+	halfLen := make([]int, len(t)-2)
+	if len(halfLen) > 1 {
+		halfLen[1] = 1
+	}
+	boxM, boxR := 0, 0
+	for i := 2; i < len(halfLen); i++ {
+		hl := 1
+		if i < boxR {
+			hl = min(boxR-i, halfLen[boxM*2-i])
+		}
+		for t[i-hl] == t[i+hl] {
+			hl++
+			boxM, boxR = i, i+hl
+		}
+		halfLen[i] = hl
+	}
+	return halfLen
+}
+
+func countPalindromesManacher(s string) int {
+	tot := 0
+	for _, hl := range manacherHalfLen(s) {
+		tot += hl / 2
+	}
+	return tot
+}

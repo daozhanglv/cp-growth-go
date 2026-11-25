@@ -41,6 +41,9 @@ type veb struct {
 // newVEB creates a vEB tree for the universe [0, u-1].
 // u is rounded up to the next power of 2 automatically.
 func newVEB(u int) *veb {
+	if u <= 0 {
+		return &veb{min: vebNil, max: vebNil, u: 0, sqrtU: 1}
+	}
 	// round up to power of 2
 	pow := 1
 	for pow < u {
@@ -176,14 +179,14 @@ func (v *veb) delete(x int) {
 
 // Successor returns the smallest element > x, or vebNil if none.
 func (v *veb) Successor(x int) int {
-	if v.u <= 2 {
-		if x == 0 && v.max == 1 {
-			return 1
-		}
+	if v.IsEmpty() || x >= v.max {
 		return vebNil
 	}
-	if !v.IsEmpty() && x < v.min {
+	if x < v.min {
 		return v.min
+	}
+	if v.u <= 2 {
+		return v.max
 	}
 	h, l := v.high(x), v.low(x)
 	if !v.cluster[h].IsEmpty() && l < v.cluster[h].max {
@@ -198,14 +201,14 @@ func (v *veb) Successor(x int) int {
 
 // Predecessor returns the largest element < x, or vebNil if none.
 func (v *veb) Predecessor(x int) int {
-	if v.u <= 2 {
-		if x == 1 && v.min == 0 {
-			return 0
-		}
+	if v.IsEmpty() || x <= v.min {
 		return vebNil
 	}
-	if !v.IsEmpty() && x > v.max {
+	if x > v.max {
 		return v.max
+	}
+	if v.u <= 2 {
+		return v.min
 	}
 	h, l := v.high(x), v.low(x)
 	if !v.cluster[h].IsEmpty() && l > v.cluster[h].min {
@@ -213,11 +216,7 @@ func (v *veb) Predecessor(x int) int {
 	}
 	predCluster := v.summary.Predecessor(h)
 	if predCluster == vebNil {
-		// x > v.min but no predecessor in clusters: v.min is the predecessor
-		if v.min != vebNil && x > v.min {
-			return v.min
-		}
-		return vebNil
+		return v.min
 	}
 	return v.idx(predCluster, v.cluster[predCluster].max)
 }

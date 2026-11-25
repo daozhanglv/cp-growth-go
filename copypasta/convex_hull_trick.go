@@ -162,3 +162,31 @@ func (c *chtStack) QueryMax(x int) int {
 	}
 	return c.lines[lo].eval(x)
 }
+
+// chtMinDeque supports minimum queries (e.g. AtCoder dp_z Frog 3, CF 319C):
+//
+//	AddLine:  lines added in NON-INCREASING k order
+//	QueryMin: x must be NON-DECREASING across queries
+//
+// Internally negates (k, b) so non-increasing k becomes non-decreasing -k in chtDeque.
+type chtMinDeque struct {
+	inner chtDeque
+}
+
+func (c *chtMinDeque) AddLine(k, b int) { c.inner.AddLine(-k, -b) }
+func (c *chtMinDeque) QueryMin(x int) int {
+	return -c.inner.QueryMax(x)
+}
+
+// chtMinStack supports minimum queries with arbitrary query x:
+//
+//	AddLine:  lines added in NON-DECREASING k order
+//	QueryMin: arbitrary x (O(log n) binary search)
+type chtMinStack struct {
+	inner chtStack
+}
+
+func (c *chtMinStack) AddLine(k, b int) { c.inner.AddLine(-k, -b) }
+func (c *chtMinStack) QueryMin(x int) int {
+	return -c.inner.QueryMax(x)
+}
