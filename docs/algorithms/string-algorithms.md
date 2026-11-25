@@ -6,14 +6,15 @@ permalink: /algorithms/string-algorithms/
 
 # String Algorithms
 
-## KMP & Z-Algorithm
+## KMP, Z-Algorithm & Manacher
 
 **File:** [`copypasta/strings.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/strings.go)
 
 | Algorithm | Complexity | Use case |
 |-----------|-----------|---------|
-| KMP | O(n+m) | Pattern matching, failure function |
-| Z-algorithm | O(n) | All occurrences of pattern in text |
+| KMP (`kmpCalcPi`, `kmpSearch`, `calcMinPeriod`) | O(n+m) | Pattern matching, borders, minimal period |
+| Z-algorithm (`calcZ`, `zSearch`, `zCompare`) | O(n) | Prefix LCPs, suffix-vs-pattern comparison |
+| Manacher (`manacherHalfLen`, `countPalindromesManacher`) | O(n) | All palindromic substrings in linear time |
 | String hashing | O(n) preprocess, O(1) query | Rolling hash, substring comparison |
 
 ## Suffix Automaton (SAM)
