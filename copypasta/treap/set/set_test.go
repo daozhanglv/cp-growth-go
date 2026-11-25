@@ -74,7 +74,7 @@ func TestInt(tt *testing.T) {
 
 	t.delete(1) // 只删除一个 1
 	assert.Equal(2, t.size())
-	
+
 	t.delete(1) // 无效
 	assert.Equal(2, t.size())
 

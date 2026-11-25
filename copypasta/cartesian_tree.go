@@ -30,7 +30,8 @@ https://codeforces.com/problemset/problem/1777/D 1900
 https://codeforces.com/problemset/problem/1580/B 2600 思想
 */
 
-// ctNode is the pointer-based Cartesian tree node (max-heap by default based on construction).
+// ctNode is the pointer-based min-heap Cartesian tree node (parent.val <= child.val).
+// On ties (top.val == v), the earlier index becomes the left child of the later index.
 type ctNode struct {
 	lr      [2]*ctNode
 	id, val int
@@ -57,7 +58,7 @@ func buildCartesianTreePtr(a []int) *ctNode {
 	return s[0]
 }
 
-// buildCartesianTree2 returns each node's left/right child indices (-1 if absent).
+// buildCartesianTree2 returns each node's left/right child indices (-1 if absent) for a min-heap Cartesian tree.
 // 非指针版，返回每个节点的左右儿子的编号
 func buildCartesianTree2(a []int) [][2]int {
 	n := len(a)
@@ -81,16 +82,14 @@ func buildCartesianTree2(a []int) [][2]int {
 	return lr
 }
 
-// cartNode is used by buildCartesianTree (index-based min-heap Cartesian tree).
+// cartNode is used by buildCartesianTree / buildCartesianTreeMax (index-based Cartesian tree).
 type cartNode struct {
 	val         int
 	left, right int // indices into the nodes slice; -1 = absent
 }
 
-// buildCartesianTree builds a min-Cartesian tree from a[0..n-1] in O(n).
-// Returns (nodes, root) where root is the index of the root node.
-// nodes[i].left and nodes[i].right give children indices (-1 if absent).
-func buildCartesianTree(a []int) (nodes []cartNode, root int) {
+// buildCartesianTreeCmp builds a Cartesian tree ordered by heapLess(parentVal, childVal) in O(n).
+func buildCartesianTreeCmp(a []int, heapLess func(x, y int) bool) (nodes []cartNode, root int) {
 	n := len(a)
 	if n == 0 {
 		return nil, -1
@@ -102,7 +101,7 @@ func buildCartesianTree(a []int) (nodes []cartNode, root int) {
 	stack := make([]int, 0, n)
 	for i := 0; i < n; i++ {
 		last := -1
-		for len(stack) > 0 && nodes[stack[len(stack)-1]].val >= nodes[i].val {
+		for len(stack) > 0 && !heapLess(nodes[stack[len(stack)-1]].val, nodes[i].val) {
 			last = stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 		}
@@ -113,4 +112,15 @@ func buildCartesianTree(a []int) (nodes []cartNode, root int) {
 		stack = append(stack, i)
 	}
 	return nodes, stack[0]
+}
+
+// buildCartesianTree builds a min-Cartesian tree from a[0..n-1] in O(n).
+// Returns (nodes, root) where root is the index of the root node.
+func buildCartesianTree(a []int) (nodes []cartNode, root int) {
+	return buildCartesianTreeCmp(a, func(x, y int) bool { return x < y })
+}
+
+// buildCartesianTreeMax builds a max-Cartesian tree from a[0..n-1] in O(n).
+func buildCartesianTreeMax(a []int) (nodes []cartNode, root int) {
+	return buildCartesianTreeCmp(a, func(x, y int) bool { return x > y })
 }

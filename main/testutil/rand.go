@@ -493,12 +493,13 @@ func (r *RG) GraphMatrix(n int, directed bool) (g [][]byte) {
 //
 // In practice, set row to 6 will make SPFA to run in worst case (about n^2/10 relaxations).
 // (Random weights are in range [1,1e5])
-//      n    avg relax (100 runs)  Dijkstra's algorithm (for comparing)
-//    5e3    2'418'393                            5'493
-//    1e4    9'674'877                           18'323
-//    2e4   38'586'596                           36'658
-//    3e4   87'033'045                           54'992
-//    1e5  966'319'883 (10 runs)                183'320
+//
+//	  n    avg relax (100 runs)  Dijkstra's algorithm (for comparing)
+//	5e3    2'418'393                            5'493
+//	1e4    9'674'877                           18'323
+//	2e4   38'586'596                           36'658
+//	3e4   87'033'045                           54'992
+//	1e5  966'319'883 (10 runs)                183'320
 //
 // Reference:
 // https://blog.csdn.net/qq_45721135/article/details/102472101
@@ -551,8 +552,10 @@ func (r *RG) GraphHackSPFA(n, row, st, minWeight, maxWeight int, dir bool) (edge
 // 要求：m 和 n 数量级一样
 // 要求：0 是起点
 // 0 --- 1 --- end (菊花)
-//   \-- 2 --/
-//   \-- 3 --/
+//
+//	\-- 2 --/
+//	\-- 3 --/
+//
 // 注：如果没有卡掉，可以试试重边（但感觉没多大意思，毕竟去个重就绕过去了）
 func (r *RG) GraphHackBellmanFord(n, m, st, minWeight, maxWeight int) (edges [][3]int) {
 	edges = make([][3]int, 0, m)

@@ -26,10 +26,15 @@ https://loj.ac/p/6466
 
 // berlekampMasseyMod finds the shortest linear recurrence for s modulo mod (prime).
 // Returns rec where s[i] = sum(rec[j]*s[i-1-j], j=0..L-1) (mod mod).
+// Safe for negative or unreduced (> mod) int64 values in s.
 func berlekampMasseyMod(s []int64, mod int64) []int64 {
 	n := len(s)
+	a := make([]int64, n)
+	for i, v := range s {
+		a[i] = (v%mod + mod) % mod
+	}
 	// C is the current LFSR polynomial: C[0]=1, recurrence encoded in C[1..L]
-	// s[i] + C[1]*s[i-1] + ... + C[L]*s[i-L] = 0
+	// a[i] + C[1]*a[i-1] + ... + C[L]*a[i-L] = 0 (mod mod)
 	C := []int64{1}
 	B := []int64{1} // previous best C
 	l := 0          // current LFSR length
@@ -37,12 +42,10 @@ func berlekampMasseyMod(s []int64, mod int64) []int64 {
 	b := int64(1)   // last non-zero discrepancy
 
 	for i := 0; i < n; i++ {
-		// compute discrepancy d = s[i] + C[1]*s[i-1] + ...
-		d := s[i] % mod
+		d := a[i]
 		for j := 1; j <= l; j++ {
-			d = (d + C[j]*s[i-j]) % mod
+			d = (d + C[j]*a[i-j]) % mod
 		}
-		d = (d%mod + mod) % mod
 		if d == 0 {
 			x++
 			continue
@@ -77,9 +80,82 @@ func berlekampMasseyMod(s []int64, mod int64) []int64 {
 	return rec
 }
 
+// kitamasaMod evaluates the k-th term (0-indexed) of the linear recurrence
+// s[i] = sum(rec[j]*s[i-1-j], j=0..L-1) (mod mod) in O(L^2 log k) time.
+func kitamasaMod(rec, init []int64, k, mod int64) int64 {
+	if k < int64(len(init)) {
+		return (init[k]%mod + mod) % mod
+	}
+	L := len(rec)
+	if L == 0 {
+		return 0
+	}
+	normRec := make([]int64, L)
+	for i, v := range rec {
+		normRec[i] = (v%mod + mod) % mod
+	}
+	if L == 1 {
+		a0 := (init[0]%mod + mod) % mod
+		return a0 * bmPow(normRec[0], k, mod) % mod
+	}
+
+	// Multiply two polynomials of degree < L modulo x^L - sum_{j=0..L-1} rec[j]*x^{L-1-j}.
+	mulPoly := func(p, q []int64) []int64 {
+		prod := make([]int64, 2*L-1)
+		for i, vp := range p {
+			if vp == 0 {
+				continue
+			}
+			for j, vq := range q {
+				prod[i+j] = (prod[i+j] + vp*vq) % mod
+			}
+		}
+		for i := 2*L - 2; i >= L; i-- {
+			if prod[i] == 0 {
+				continue
+			}
+			c := prod[i]
+			for j := 0; j < L; j++ {
+				prod[i-1-j] = (prod[i-1-j] + c*normRec[j]) % mod
+			}
+		}
+		return prod[:L]
+	}
+
+	res := make([]int64, L)
+	res[0] = 1
+	base := make([]int64, L)
+	base[1] = 1
+	for exp := k; exp > 0; exp >>= 1 {
+		if exp&1 == 1 {
+			res = mulPoly(res, base)
+		}
+		base = mulPoly(base, base)
+	}
+
+	var ans int64
+	for i := 0; i < L; i++ {
+		ai := (init[i]%mod + mod) % mod
+		ans = (ans + res[i]*ai) % mod
+	}
+	return ans
+}
+
+// guessNthMod finds the shortest recurrence for s modulo prime mod and evaluates s[k] (0-indexed).
+func guessNthMod(s []int64, k, mod int64) int64 {
+	if len(s) == 0 {
+		return 0
+	}
+	if k < int64(len(s)) {
+		return (s[k]%mod + mod) % mod
+	}
+	rec := berlekampMasseyMod(s, mod)
+	return kitamasaMod(rec, s, k, mod)
+}
+
 func bmPow(base, exp, mod int64) int64 {
 	result := int64(1)
-	base %= mod
+	base = (base%mod + mod) % mod
 	for exp > 0 {
 		if exp&1 == 1 {
 			result = result * base % mod

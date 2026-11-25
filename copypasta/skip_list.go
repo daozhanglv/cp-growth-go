@@ -42,19 +42,33 @@ type skipList struct {
 	head  *slNode
 	level int // number of active levels (1-indexed)
 	size  int
+	seed  uint64
 }
 
 func newSkipList() *skipList {
 	return &skipList{
 		head:  &slNode{forward: make([]*slNode, _slMaxLevel)},
 		level: 1,
+		seed:  uint64(rand.Int63()) | 1,
 	}
 }
 
-func (*skipList) randomLevel() int {
+func (sl *skipList) nextRand() uint64 {
+	x := sl.seed
+	x ^= x << 13
+	x ^= x >> 7
+	x ^= x << 17
+	sl.seed = x
+	return x * 0x2545F4914F6CDD1D
+}
+
+func (sl *skipList) randomLevel() int {
 	lv := 1
-	for lv < _slMaxLevel && rand.Float64() < _slP {
+	r := sl.nextRand()
+	// Promotion probability p = 1/4: check 2 bits per level from a single 64-bit draw.
+	for lv < _slMaxLevel && r&3 == 0 {
 		lv++
+		r >>= 2
 	}
 	return lv
 }

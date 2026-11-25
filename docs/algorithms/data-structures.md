@@ -106,14 +106,14 @@ Includes: weighted DSU, rollback DSU, offline dynamic graph connectivity, and bi
 
 **File:** [`copypasta/convex_hull_trick.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/convex_hull_trick.go)
 
-Slope-trick DP optimization for transitions of the form `dp[i] = max(k[j]*x[i] + b[j])`.
+Slope-trick DP optimization for linear transitions (`max` or `min` over `k[j]*x[i] + b[j]`), using exact 128-bit cross products to prevent `int64` overflow.
 
-| Variant | Constraint | Complexity |
-|---------|-----------|-----------|
-| `chtDeque` | Lines: non-decreasing k; Queries: non-decreasing x | O(1) amortized |
-| `chtStack` | Lines: non-increasing k; Queries: arbitrary | O(log n) per query |
-
-Use `chtDeque` when both slopes and query x-values are monotone; otherwise use the Li Chao Tree.
+| Variant | Mode | Constraint | Complexity |
+|---------|------|-----------|-----------|
+| `chtDeque` | `QueryMax` | Lines: non-decreasing `k`; Queries: non-decreasing `x` | O(1) amortized |
+| `chtStack` | `QueryMax` | Lines: non-increasing `k`; Queries: arbitrary `x` | O(log n) per query |
+| `chtMinDeque` | `QueryMin` | Lines: non-increasing `k`; Queries: non-decreasing `x` | O(1) amortized |
+| `chtMinStack` | `QueryMin` | Lines: non-decreasing `k`; Queries: arbitrary `x` | O(log n) per query |
 
 ---
 
@@ -121,12 +121,13 @@ Use `chtDeque` when both slopes and query x-values are monotone; otherwise use t
 
 **File:** [`copypasta/li_chao_tree.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/li_chao_tree.go)
 
-Dynamic segment tree for maximum-y queries over lines `y = kx + b`, arbitrary insert and query order.
+Dynamic segment tree for extremum queries over lines/segments `y = kx + b` (`liChaoTree` for `max`, `liChaoMinTree` for `min`), arbitrary insert and query order.
 
 | Operation | Complexity |
 |-----------|-----------|
-| AddLine(k, b) | O(log n) |
-| QueryMax(x) | O(log n) |
+| `AddLine(k, b)` / `QueryMax(x)` / `QueryMin(x)` | O(log X) |
+| `AddSegment(l, r, k, b)` | O(log² X) |
+| `Merge(other)` | O(n log X) amortized |
 
 ---
 
@@ -134,13 +135,14 @@ Dynamic segment tree for maximum-y queries over lines `y = kx + b`, arbitrary in
 
 **File:** [`copypasta/wavelet_tree.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/wavelet_tree.go)
 
-Static structure on integer arrays supporting powerful range queries.
+Coordinate-compressed static structure (`wt := newWaveletTree(a)`) on integer slices supporting arbitrary 64-bit values (`σ ≤ n` distinct values).
 
 | Operation | Complexity |
 |-----------|-----------|
-| Kth(l, r, k) — k-th smallest in range | O(log U) |
-| CountLE(l, r, v) — count ≤ v in range | O(log U) |
-| Build | O(n log U) |
+| `Kth(l, r, k)` — k-th smallest in range | O(log σ) |
+| `CountLE(l, r, v)` — count ≤ v in range | O(log σ) |
+| `CountRange(l, r, lo, hi)` — count in `[lo, hi]` | O(log σ) |
+| Build | O(n log σ) |
 
 ---
 
@@ -166,6 +168,6 @@ fmt.Println(h.val)       // 2
 
 **File:** [`copypasta/cartesian_tree.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/cartesian_tree.go)
 
-O(n) construction of a min-heap-ordered binary tree that is also BST-ordered by index.
+O(n) construction of a heap-ordered binary tree (`buildCartesianTree` for min-heap, `buildCartesianTreeMax` for max-heap) that is also BST-ordered by index.
 In-order traversal yields the original array indices 0, 1, …, n−1.
-The LCA of indices i and j in the Cartesian tree equals the RMQ minimum of a[i..j].
+The LCA of indices i and j in the min-Cartesian tree equals the RMQ minimum of `a[i..j]`.

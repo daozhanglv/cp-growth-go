@@ -4,17 +4,17 @@ daozhanglv 的算法竞赛成长记录：用 Go 刷题，积累自己的题解�
 
 ## 这个项目记录什么
 
-- **我的题解和笔记**：放在 [my-solutions/](./my-solutions/)，按时间记录做过的题、卡住的地方和学到的东西。
-- **带测试的模板**：`copypasta/` 中的常用模板正在逐步补充测试，用暴力算法或大整数计算做对照，避免比赛时才发现模板写错。
-- **可重复的检查**：运行 `sh scripts/check.sh` 或查看 GitHub Actions，就能验证公共工具和已覆盖的模板。
+- **我的题解和笔记**：放在 [my-solutions/](./my-solutions/)，每道题包含笔记与可独立编译测试的 Go 代码，记录做过的题、卡住的地方和学到的东西。
+- **带测试的模板**：`copypasta/` 中的常用模板持续补充暴力对照测试，避免比赛时才发现模板边界写错。
+- **可重复的检查**：运行 `sh scripts/check.sh` 或查看 GitHub Actions，就能验证公共工具、个人题解和已覆盖的模板。
 
 ## 我做的改进
 
-- 修复了 Codeforces 和 LeetCode 本地测试工具的样例校验问题。
-- 新增检查脚本、CI 工作流和贡献指南。
+- 修复了 Codeforces 和 LeetCode 本地测试工具的样例校验问题，以及 `strings.go` 中 `zCompare` 的前缀越界/误判问题。
+- 新增检查脚本、题解脚手架与索引自动同步脚本、CI 工作流和贡献指南。
 - 修复 `copypasta` 主模板包无法编译的问题，并把它纳入 `go vet` 和测试。
-- 为并查集、线段树、最短路、基础数论、树状数组和组合数模板新增对照测试。
-- 新增带测试的模板：跳表、van Emde Boas 树、李超线段树、小波树、斜堆、Berlekamp-Massey、凸包优化（CHT）和后缀数组。
+- 为并查集、线段树、树状数组、ST 表、最短路、基础数论、组合数、KMP / Z 函数 / Manacher、AC 自动机、后缀自动机（SAM）、Splay 等核心模板补充暴力对照测试。
+- 新增并完善带测试的模板：跳表、van Emde Boas 树、李超线段树（含区间插入、合并与最小值封装）、离散化小波树、斜堆、Berlekamp-Massey + Kitamasa 线性递推、凸包优化（CHT 最大/最小值）和后缀数组（支持整数序列）。
 - 新增英文说明 [README_EN.md](./README_EN.md) 和文档站点 [docs/](./docs/)。
 
 ## 关于我
@@ -214,7 +214,7 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
     - 高斯消元
     - 行列式
     - 线性基
-  - [数值分析 math_numerical_analysis.go](copypasta/math_numerical_analysis.go)
+  - [数值分析 math_numerical_analysis.go](/copypasta/math_numerical_analysis.go)
     - 自适应辛普森积分
     - 拉格朗日插值
   - [计算几何 geometry.go](/copypasta/geometry.go)
@@ -402,6 +402,8 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
 
 ## 如何选择题目 How to Choose Problems
 
+> 以下选题与训练建议来自原作者灵茶山艾府（EndlessCheng）。
+
 ### Rating < 2100
 
 这一阶段主要目标是提高对问题的观察能力。做构造题可以针对性地训练这一点。
@@ -410,9 +412,9 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
 
 [https://codeforces.com/problemset?order=BY_SOLVED_DESC&tags=constructive+algorithms%2C1700-1900](https://codeforces.com/problemset?order=BY_SOLVED_DESC&tags=constructive+algorithms%2C1700-1900)
 
-通过大量的构造题训练，提高观察能力，快速找到切题入口。具体见我在知乎上的这篇 [回答](https://www.zhihu.com/question/353734418/answer/2353160035)。
+通过大量的构造题训练，提高观察能力，快速找到切题入口。具体见原作者在知乎上的这篇 [回答](https://www.zhihu.com/question/353734418/answer/2353160035)。
 
-### Rating >= 2100（个人训练用，仅供参考）
+### Rating >= 2100（训练参考）
 
 见识更高的山、更广的海。
 
@@ -427,7 +429,7 @@ go test -count=1 main/1-99/10C.go main/1-99/10C_test.go
 - [交互 2200+](https://codeforces.com/problemset?order=BY_SOLVED_DESC&tags=interactive%2C2200-)：偶尔做做，了解一些解题套路。
 - [博弈 2000+](https://codeforces.com/problemset?order=BY_SOLVED_DESC&tags=games%2C2000-)：也适合锻炼手玩。由于题目比较少，从 2000 开始筛选。
 
-**我的 Codeforces 账号**
+**原作者 Codeforces 账号**
 
 [![0x3F](https://img.shields.io/badge/0x3F-MASTER%202208-orange?style=for-the-badge)](https://codeforces.com/profile/0x3F)
 
@@ -554,7 +556,7 @@ https://www.luogu.com.cn/blog/Troverld/index
 
 ## 其他 Others
 
-My GoLand `Live Templates` and `Postfix Completion` [settings](/misc/my_goland_template)
+原作者的 GoLand `Live Templates` 与 `Postfix Completion` 配置：[settings](/misc/my_goland_template)
 
 ### Useful Tools
 

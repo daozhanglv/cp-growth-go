@@ -12,10 +12,10 @@ permalink: /algorithms/string-algorithms-advanced/
 
 | Function | Description | Complexity |
 |----------|-------------|-----------|
-| `buildSA(s)` | Build suffix array | O(n log n) |
-| `buildLCP(s, sa)` | Build LCP array (Kasai) | O(n) |
+| `buildSA(s)` / `buildSAInt(a)` | Build suffix array on string or `[]int` | O(n log n) |
+| `buildLCP(s, sa)` / `buildLCPInt(a, sa)` | Build LCP array (Kasai) | O(n) |
 | `countDistinctSubstrings(s)` | Count distinct non-empty substrings | O(n log n) |
-| `longestCommonSubstring(s, t)` | Longest common substring | O((n+m) log(n+m)) |
+| `longestCommonSubstring(s, t)` | Longest common substring (null-byte safe) | O((n+m) log(n+m)) |
 
 `SA[i]` is the start index of the i-th lexicographically smallest suffix.
 `LCP[i]` is the length of the longest common prefix between `SA[i-1]` and `SA[i]`.
@@ -25,11 +25,11 @@ permalink: /algorithms/string-algorithms-advanced/
 - [LC1044](https://leetcode.cn/problems/longest-duplicate-substring/) — Longest Duplicate Substring
 - [CF 235C](https://codeforces.com/problemset/problem/235/C) — 2400
 
-## Berlekamp-Massey (Linear Recurrence Finding)
+## Berlekamp-Massey & Kitamasa (Linear Recurrence)
 
 **File:** [`copypasta/berlekamp_massey.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/berlekamp_massey.go)
 
-Given a sequence `s[0..n-1]` over Z/pZ, finds the shortest linear recurrence automatically.
+Given a sequence `s[0..n-1]` over Z/pZ, finds the shortest linear recurrence and evaluates the `k`-th term (`k` up to 10¹⁸) in O(L² log k) via Kitamasa polynomial remainder.
 
 ```go
 mod := int64(1e9 + 7)
@@ -37,9 +37,8 @@ mod := int64(1e9 + 7)
 s := []int64{0, 1, 1, 2, 3, 5, 8, 13}
 rec := berlekampMasseyMod(s, mod)
 // rec = [1, 1]  meaning s[i] = 1*s[i-1] + 1*s[i-2]
+term50 := guessNthMod(s, 50, mod) // evaluates s[50] mod 1e9+7
 ```
-
-Combine with matrix exponentiation to evaluate `s[n]` for n up to 10^18.
 
 **Related problems:**
 - [CF 1511G](https://codeforces.com/problemset/problem/1511/G) — 3100

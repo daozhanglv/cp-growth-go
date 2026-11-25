@@ -21,10 +21,15 @@ permalink: /algorithms/graph-theory/
 
 **File:** [`copypasta/graph_flow.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/graph_flow.go)
 
-- **Dinic's algorithm** — O(V²E) max flow, O(E√V) on unit graphs
-- **Min-cost max flow (MCMF)** — SPFA-based successive shortest paths
-- **Bipartite matching** — Hopcroft-Karp O(E√V)
-- **Hungarian algorithm** — O(V³) minimum weight bipartite matching
+- **Dinic / ISAP / HLPP** — max flow (`O(V²E)`, `O(E√V)` on unit networks)
+- **Min-cost max flow (MCMF)** — SPFA / Dijkstra successive shortest paths
+
+## Bipartite Matching
+
+**File:** [`copypasta/graph.go`](https://github.com/daozhanglv/cp-growth-go/blob/master/copypasta/graph.go)
+
+- **Hopcroft-Karp** — `O(E√V)` unweighted maximum bipartite matching
+- **Hungarian / Kuhn-Munkres (KM)** — `O(V³)` maximum-weight bipartite matching
 
 ## Tree Algorithms
 

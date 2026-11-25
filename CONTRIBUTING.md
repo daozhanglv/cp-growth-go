@@ -10,11 +10,26 @@ sh scripts/check.sh
 
 脚本可以从任意工作目录调用，也可以用 `GO=/path/to/go sh scripts/check.sh` 指定 Go 可执行文件。所有测试均禁用结果缓存，并设置超时。
 
-自动检查覆盖 `copypasta` 主模板包（`go vet` 和测试）、`main/testutil`、`leetcode/testutil`、四个 `copypasta/treap` 包，以及 CF10C、CF14D、CF20C 的内嵌样例。它验证公共工具和部分代表性题解，不代表所有历史题解都已通过检查。修改其他题目或模板时，还需运行对应的有限测试。CI 在上述代码、检查脚本或模块文件变动时触发，也支持手动触发。
+自动检查覆盖：
+- 维护范围内 Go 文件的 `gofmt` 格式校验与 `my-solutions/README.md` 索引同步检查（`sh scripts/sync-solutions.sh --check`）；
+- `copypasta` 主模板包、`main/testutil`、`leetcode/testutil`、四个 `copypasta/treap` 包、`scripts` 工作流测试，以及 `my-solutions/` 下所有个人题解包的 `go vet` 和 `-race` 测试；
+- CF10C、CF14D、CF20C 的内嵌样例。
+
+它验证公共工具、模板、个人新增题解和部分代表性历史题解，不代表所有历史题解都已通过检查。修改其他历史题目或未纳入测试的模板时，还需运行对应的有限测试。CI 在上述代码、检查脚本或模块文件变动时触发，也支持手动触发。
 
 不要默认运行全仓库测试：`copypasta/template` 中部分测试是联网生成器，有些会循环重试；部分题目测试依赖被忽略的本地 `.txt` 文件；无尽对拍需要单独运行并手动停止。
 
-## 测试题解
+## 新增个人题解（`my-solutions/`）
+
+使用脚本生成带独立目录的题解包（含 `README.md`、`solution.go`、`solution_test.go`）并自动刷新索引：
+
+```sh
+sh scripts/new-solution.sh Codeforces cf-1234a "CF 1234A" 800 "贪心" "https://codeforces.com/problemset/problem/1234/A"
+```
+
+修改笔记中的状态或标签后运行 `sh scripts/sync-solutions.sh` 即可同步 `my-solutions/README.md`。
+
+## 测试历史题解
 
 Codeforces 同一目录包含多道题目，建议只编译本次修改的文件：
 

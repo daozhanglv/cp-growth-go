@@ -7,6 +7,7 @@ on:
       - 'leetcode/testutil/**'
       - 'copypasta/*.go'
       - 'copypasta/treap/**'
+      - 'my-solutions/**'
       - 'main/1-99/10C*'
       - 'main/1-99/14D*'
       - 'main/1-99/20C*'
@@ -20,6 +21,7 @@ on:
       - 'leetcode/testutil/**'
       - 'copypasta/*.go'
       - 'copypasta/treap/**'
+      - 'my-solutions/**'
       - 'main/1-99/10C*'
       - 'main/1-99/14D*'
       - 'main/1-99/20C*'
@@ -42,5 +44,5 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: Test shared utilities and sample solutions
+      - name: Test templates, utilities, and personal solutions
         run: sh scripts/check.sh
