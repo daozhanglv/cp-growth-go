@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestSolutionWorkflowScripts(t *testing.T) {
@@ -28,6 +29,9 @@ func TestSolutionWorkflowScripts(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Exercise byte-oriented awk even on machines that default to a UTF-8 locale.
+	t.Setenv("LC_ALL", "C")
+
 	runSh := func(envExtra []string, args ...string) string {
 		t.Helper()
 		cmd := exec.Command("sh", args...)
@@ -40,9 +44,9 @@ func TestSolutionWorkflowScripts(t *testing.T) {
 		return string(out)
 	}
 
-	// 1. Create a solution containing '|' in topics to verify Markdown table escaping.
+	// 1. Create a solution with a pipe and a tab in its topics.
 	runSh([]string{"DATE=2026-11-25"}, "scripts/new-solution.sh",
-		"Codeforces", "cf-100a", "CF 100A Carpeting", "1100", "贪心 | 数学", "https://codeforces.com/problemset/problem/100/A")
+		"Codeforces", "cf-100a", "CF 100A Carpeting", "1100", "贪心 |\t数学", "https://codeforces.com/problemset/problem/100/A")
 
 	// 2. Verify sync-solutions.sh --check passes immediately after creation.
 	runSh(nil, "scripts/sync-solutions.sh", "--check")
@@ -52,8 +56,12 @@ func TestSolutionWorkflowScripts(t *testing.T) {
 		t.Fatal(err)
 	}
 	readme := string(readmeBytes)
-	if !strings.Contains(readme, `贪心 \| 数学`) {
-		t.Fatalf("expected pipe in topics to be escaped, got:\n%s", readme)
+	if !utf8.ValidString(readme) {
+		t.Fatalf("index contains invalid UTF-8:\n%s", readme)
+	}
+	wantRow := "| 2026-11-25 | Codeforces | [CF 100A Carpeting](https://codeforces.com/problemset/problem/100/A) | 1100 | 贪心 \\|\t数学 | 进行中 |"
+	if !strings.Contains(readme, wantRow) {
+		t.Fatalf("expected complete row with escaped pipe and intact metadata, got:\n%s", readme)
 	}
 	if !strings.Contains(readme, "共记录 **1** 题（独立完成 0 · 看题解后完成 0 · 待复习 0 · 进行中 1）") {
 		t.Fatalf("unexpected stats line:\n%s", readme)
@@ -77,7 +85,10 @@ func TestSolutionWorkflowScripts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	updatedNote := strings.Replace(string(noteBytes), "- 状态：进行中", "- 状态：独立完成", 1)
+	updatedNote := strings.NewReplacer(
+		"- 状态：进行中", "- 状态: 独立完成",
+		"- 链接：https://codeforces.com/problemset/problem/100/A", "- 链接：",
+	).Replace(string(noteBytes))
 	if err := os.WriteFile(notePath, []byte(updatedNote), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -98,5 +109,8 @@ func TestSolutionWorkflowScripts(t *testing.T) {
 	}
 	if !strings.Contains(string(readmeBytes), "共记录 **1** 题（独立完成 1 · 看题解后完成 0 · 待复习 0 · 进行中 0）") {
 		t.Fatalf("stats did not update after sync:\n%s", readmeBytes)
+	}
+	if !strings.Contains(string(readmeBytes), "| CF 100A Carpeting |") {
+		t.Fatalf("expected an unlinked title when the link is empty:\n%s", readmeBytes)
 	}
 }

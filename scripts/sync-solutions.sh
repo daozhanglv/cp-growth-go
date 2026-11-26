@@ -57,30 +57,31 @@ find "$SOLUTIONS_ROOT" -mindepth 3 -maxdepth 4 -name '*.md' 2>/dev/null | sort |
         title = trim(s)
         next
     }
-    /^- 链接[：:]/ {
-        s = $0; sub(/^- 链接[：:]/, "", s); link = trim(s); next
+    # Match the entire full-width colon even when awk treats UTF-8 as bytes.
+    /^- 链接(：|:)/ {
+        s = $0; sub(/^- 链接(：|:)/, "", s); link = trim(s); next
     }
-    /^- 平台和难度[：:]/ {
-        s = $0; sub(/^- 平台和难度[：:]/, "", s); s = trim(s)
+    /^- 平台和难度(：|:)/ {
+        s = $0; sub(/^- 平台和难度(：|:)/, "", s); s = trim(s)
         n = split(s, parts, "/")
         if (n >= 1) platform = trim(parts[1])
         if (n >= 2) diff = trim(parts[2])
         next
     }
-    /^- 平台[：:]/ {
-        s = $0; sub(/^- 平台[：:]/, "", s); v = trim(s); if (v != "") platform = v; next
+    /^- 平台(：|:)/ {
+        s = $0; sub(/^- 平台(：|:)/, "", s); v = trim(s); if (v != "") platform = v; next
     }
-    /^- 难度[：:]/ {
-        s = $0; sub(/^- 难度[：:]/, "", s); v = trim(s); if (v != "") diff = v; next
+    /^- 难度(：|:)/ {
+        s = $0; sub(/^- 难度(：|:)/, "", s); v = trim(s); if (v != "") diff = v; next
     }
-    /^- 日期[：:]/ {
-        s = $0; sub(/^- 日期[：:]/, "", s); v = trim(s); if (v != "") date = v; next
+    /^- 日期(：|:)/ {
+        s = $0; sub(/^- 日期(：|:)/, "", s); v = trim(s); if (v != "") date = v; next
     }
-    /^- 知识点[：:]/ {
-        s = $0; sub(/^- 知识点[：:]/, "", s); v = trim(s); if (v != "") topics = v; next
+    /^- 知识点(：|:)/ {
+        s = $0; sub(/^- 知识点(：|:)/, "", s); v = trim(s); if (v != "") topics = v; next
     }
-    /^- 状态[：:]/ {
-        s = $0; sub(/^- 状态[：:]/, "", s); v = trim(s); if (v != "") status = v; next
+    /^- 状态(：|:)/ {
+        s = $0; sub(/^- 状态(：|:)/, "", s); v = trim(s); if (v != "") status = v; next
     }
     END {
         if (title == "") title = rel
@@ -116,7 +117,10 @@ NF >= 4 {
     else if (st == "看题解后完成") editorial++
     else if (st == "待复习") review++
     else wip++
-    rows[total] = $4
+    # Strip the three metadata fields and keep any tabs inside the Markdown row.
+    row = $0
+    sub(/^[^\t]*\t[^\t]*\t[^\t]*\t/, "", row)
+    rows[total] = row
 }
 END {
     printf "<!-- SOLUTIONS:START -->\n"
